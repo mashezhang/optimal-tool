@@ -87,7 +87,7 @@ public class OptimalCount {
             List<DataVo> dataVos = new LinkedList<>();
             BigDecimal sum1;
             BigDecimal sum2;
-            for (; range1 <= range2; ) {
+            for (; range1 <= range2 && range2 < LAKH; ) {
                 sum1 = getSum(group1, range2);
                 sum2 = getSum(group2, rate2);
                 for (; sum1.add(sum2).compareTo(target) < 0 && rate2 < LAKH; ) {
