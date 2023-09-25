@@ -19,7 +19,9 @@ import java.util.stream.Collectors;
 
 
 public class OptimalFxApplication extends Application {
+    // 数据组校验正则
     String groupDataReg = "(([1-9][0-9]*)+(.[0-9]+)?[,，]?)+";
+    // 单项数据校验正则
     String dataReg = "(([1-9][0-9]*)+(.[0-9]+)?)+";
 
     public static void main(String[] args) {
@@ -32,7 +34,7 @@ public class OptimalFxApplication extends Application {
         TextField group2 = new TextField();
         TextField target = new TextField();
         TextArea ta = new TextArea("");
-        Button be = getButton(group1, group2, target,ta);
+        Button be = getButton(group1, group2, target, ta);
 
         group1.setPromptText("输入数据组（逗号隔开）");
         group2.setPromptText("输入数据组（逗号隔开）");
@@ -59,7 +61,7 @@ public class OptimalFxApplication extends Application {
         primaryStage.show();
     }
 
-    private Button getButton(TextField group1, TextField group2, TextField target,TextArea ta) {
+    private Button getButton(TextField group1, TextField group2, TextField target, TextArea ta) {
         Button be = new Button("预算");
         be.setCursor(Cursor.HAND);
         be.setOnMouseClicked(e -> {
@@ -82,8 +84,8 @@ public class OptimalFxApplication extends Application {
             Object[] gd1 = split(groupData1);
             Object[] gd2 = split(groupData2);
             OptimalCount.DataDto params = new OptimalCount.DataDto(BigDecimal.valueOf(Double.valueOf(targetData)), gd1, gd2);
-            List<OptimalCount.DataVo>  dataVos = new OptimalCount().optimalCount(params);
-            ta.setText(dataVos.stream().map(item->item.toString()).collect(Collectors.joining("\n")));
+            List<OptimalCount.DataVo> dataVos = new OptimalCount().optimalCount(params);
+            ta.setText(dataVos.stream().map(item -> item.toString()).collect(Collectors.joining("\n")));
         });
         return be;
     }
