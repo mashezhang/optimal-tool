@@ -1,4 +1,4 @@
-package com.mx.fxlesson;
+package com.masz;
 
 
 import java.math.BigDecimal;

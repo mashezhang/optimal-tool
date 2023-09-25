@@ -1,4 +1,4 @@
-package com.mx.fxlesson;
+package com.masz;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
