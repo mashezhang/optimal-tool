@@ -7,6 +7,9 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+/**
+ * 最大组全遍历，最小组倍率取对应最大组的最小接近值
+ */
 public class OptimalCount {
     private Integer LAKH = 100000;
     private BigDecimal LAKH_FOLD = BigDecimal.valueOf(LAKH);
@@ -49,7 +52,7 @@ public class OptimalCount {
                     break;
                 }
             }
-            return dataVos.subList(0, offset + 1).stream().sorted(Comparator.comparing(DataVo::getCount)).collect(Collectors.toList());
+            return dataVos.subList(0, offset + 1).stream().sorted(Comparator.comparing(DataVo::getMaxGroupRate)).collect(Collectors.toList());
         }
     }
 
@@ -61,6 +64,13 @@ public class OptimalCount {
         return group;
     }
 
+    /**
+     * 最大组与最大组倍率的舍入两位小数乘积之和 加上最小组与最小组倍率的舍入两位小数乘积之和
+     *
+     * @param g
+     * @param r
+     * @return
+     */
     private BigDecimal getSum(List<BigDecimal> g, int r) {
         // 单项率舍入累加 (#.##)
         return g.stream().map(i -> i.multiply(BigDecimal.valueOf(r)).divide(LAKH_FOLD, 2, RoundingMode.HALF_UP)).reduce((d1, d2) -> d1.add(d2)).get();
@@ -84,6 +94,14 @@ public class OptimalCount {
             this.range2 = range2;
         }
 
+        /**
+         * 循环预算
+         * 1.滚动最大组的所有倍率
+         * 2.计算出当前最大组倍率对应的的最小组的近似倍率，即：
+         * （最大组与最大组倍率的舍入两位小数乘积之和 加上最小组与最小组倍率的舍入两位小数乘积之和）不小于预算值
+         *
+         * @return
+         */
         @Override
         public List<DataVo> call() {
             int rate2 = 0;
@@ -93,7 +111,7 @@ public class OptimalCount {
             for (; range1 <= range2 && range2 <= LAKH; ) {
                 sum1 = getSum(group1, range2);
                 sum2 = getSum(group2, rate2);
-                for (; sum1.add(sum2).compareTo(target) < 0 && rate2 < LAKH; ) {
+                for (; sum1.add(sum2).compareTo(target) != 0 && rate2 <= LAKH; ) {
                     rate2++;
                     sum2 = getSum(group2, rate2);
                 }
