@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.masz</groupId>
-    <artifactId>optimalTool</artifactId>
+    <artifactId>optimal-tool</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>optimal-tool</name>
 
