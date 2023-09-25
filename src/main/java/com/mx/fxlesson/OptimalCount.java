@@ -2,6 +2,7 @@ package com.mx.fxlesson;
 
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -18,36 +19,38 @@ public class OptimalCount {
         BigDecimal count1 = group1.stream().reduce((d1, d2) -> d1.add(d2)).get();
         BigDecimal count2 = group2.stream().reduce((d1, d2) -> d1.add(d2)).get();
         boolean count1GreaterCount2 = count1.compareTo(count2) >= 0;
+        BigDecimal maxGroupCount = count1GreaterCount2 ? count1 : count2;
         List<BigDecimal> maxGroup = count1GreaterCount2 ? group1 : group2;
         List<BigDecimal> minGroup = count1GreaterCount2 ? group2 : group1;
         // 分片
-        int i = 0;
-        do {
-            i++;
-        } while (getSum(maxGroup, i).compareTo(target) < 0);
-        int step = i / 4;
+        int maxRange = target.multiply(LAKH_FOLD).divide(maxGroupCount, 0, RoundingMode.HALF_UP).intValue();
+        int step = maxRange / 4;
         // 分片筛选
         List<DataVo> dataVos = new LinkedList<>();
         CallableImple call1 = new CallableImple(target, maxGroup, minGroup, 0, step - 1);
         CallableImple call2 = new CallableImple(target, maxGroup, minGroup, step, step * 2 - 1);
         CallableImple call3 = new CallableImple(target, maxGroup, minGroup, step * 2, step * 3 - 1);
         CallableImple call4 = new CallableImple(target, maxGroup, minGroup, step * 3, step * 4 - 1);
-        CallableImple call5 = new CallableImple(target, maxGroup, minGroup, step * 4, i - 1);
+        CallableImple call5 = new CallableImple(target, maxGroup, minGroup, step * 4, maxRange);
         dataVos.addAll(call1.call());
         dataVos.addAll(call2.call());
         dataVos.addAll(call3.call());
         dataVos.addAll(call4.call());
         dataVos.addAll(call5.call());
-        // 近似值筛选
-        dataVos = dataVos.stream().sorted(Comparator.comparing(DataVo::getCount)).collect(Collectors.toList());
-        int length = dataVos.size();
-        int offset = 0;
-        for (; offset < length - 1; offset++) {
-            if (dataVos.get(offset).getCount().compareTo(dataVos.get(offset + 1).getCount()) != 0) {
-                break;
+        if (dataVos.isEmpty()) {
+            return dataVos;
+        } else {
+            // 近似值筛选
+            dataVos = dataVos.stream().sorted(Comparator.comparing(DataVo::getCount)).collect(Collectors.toList());
+            int length = dataVos.size();
+            int offset = 0;
+            for (; offset < length - 1; offset++) {
+                if (dataVos.get(offset).getCount().compareTo(dataVos.get(offset + 1).getCount()) != 0) {
+                    break;
+                }
             }
+            return dataVos.subList(0, offset + 1).stream().sorted(Comparator.comparing(DataVo::getCount)).collect(Collectors.toList());
         }
-        return dataVos.subList(0, offset + 1);
     }
 
     private List<BigDecimal> convertToGroup(Object[] numbers) {
@@ -60,7 +63,7 @@ public class OptimalCount {
 
     private BigDecimal getSum(List<BigDecimal> g, int r) {
         // 单项率舍入累加 (#.##)
-        return g.stream().map(i -> i.multiply(BigDecimal.valueOf(r)).divide(LAKH_FOLD).setScale(2, BigDecimal.ROUND_HALF_UP)).reduce((d1, d2) -> d1.add(d2)).get();
+        return g.stream().map(i -> i.multiply(BigDecimal.valueOf(r)).divide(LAKH_FOLD, 2, RoundingMode.HALF_UP)).reduce((d1, d2) -> d1.add(d2)).get();
     }
 
     /**
@@ -87,7 +90,7 @@ public class OptimalCount {
             List<DataVo> dataVos = new LinkedList<>();
             BigDecimal sum1;
             BigDecimal sum2;
-            for (; range1 <= range2 && range2 < LAKH; ) {
+            for (; range1 <= range2 && range2 <= LAKH; ) {
                 sum1 = getSum(group1, range2);
                 sum2 = getSum(group2, rate2);
                 for (; sum1.add(sum2).compareTo(target) < 0 && rate2 < LAKH; ) {
@@ -97,9 +100,7 @@ public class OptimalCount {
                 if (rate2 >= LAKH) {
                     break;
                 }
-                dataVos.add(new DataVo(sum1.add(sum2),
-                        BigDecimal.valueOf(range2).divide(LAKH_FOLD),
-                        BigDecimal.valueOf(rate2).divide(LAKH_FOLD)));
+                dataVos.add(new DataVo(sum1.add(sum2), BigDecimal.valueOf(range2).divide(LAKH_FOLD, 5, RoundingMode.HALF_UP), BigDecimal.valueOf(rate2).divide(LAKH_FOLD, 5, RoundingMode.HALF_UP)));
                 range2--;
             }
             return dataVos;
